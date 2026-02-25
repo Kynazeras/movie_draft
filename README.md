@@ -1,96 +1,169 @@
-# MovieDraft
+# Movie Draft
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+**Draft movies with friends. Debate who won.**
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+Movie Draft is a real-time multiplayer app where users create draft rooms, invite friends, and take turns picking movies across custom categories using a snake-draft format. Think fantasy football, but for film lovers.
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+## Features
 
-## Run tasks
+- 🎬 **Movie Search** — Search for any movie powered by [The Movie Database (TMDB)](https://www.themoviedb.org/)
+- 🏠 **Draft Rooms** — Create rooms with custom categories (e.g. "Best Sci-Fi", "Most Underrated", "Guilty Pleasure")
+- 🔄 **Snake Draft** — Fair turn order that reverses each round so no one always picks last
+- ⚡ **Real-time Updates** — Live pick tracking via WebSockets (Socket.io) — everyone sees picks instantly
+- 🔐 **Authentication** — Register and log in with email/password; JWT-based sessions
+- 📨 **Invite Links** — Share a unique invite code or link so friends can join your room
 
-To run tasks with Nx use:
+## Tech Stack
 
-```sh
-npx nx <target> <project-name>
+| Layer    | Technology                                                   |
+| -------- | ------------------------------------------------------------ |
+| Frontend | React 19, React Router, Redux Toolkit, Tailwind CSS v4, Vite |
+| Backend  | Hono (Node.js), Socket.io                                    |
+| Database | PostgreSQL via Prisma ORM                                    |
+| Monorepo | Nx                                                           |
+
+## Project Structure
+
+```
+apps/
+  client/     # React frontend (Vite, port 4200)
+  server/     # Hono API + Socket.io server (port 3000)
+libs/
+  prisma-client/  # Shared Prisma client and schema
+  shared/         # Shared utilities
 ```
 
-For example:
+## Prerequisites
+
+- [Node.js](https://nodejs.org/) v20+
+- [Docker](https://www.docker.com/) (for the database)
+- A free [TMDB API key](https://developer.themoviedb.org/docs/getting-started)
+
+## Getting Started
+
+### 1. Install dependencies
 
 ```sh
-npx nx build myproject
+npm install
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+### 2. Configure environment variables
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Create a `.env` file in the project root:
 
-## Add new projects
+```dotenv
+# Database
+DATABASE_URL="postgresql://movie_draft:movie_draft_dev@localhost:5432/movie_draft"
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+# Auth — change this in production
+AUTH_SECRET="your-secret-key"
 
-To install a new plugin you can use the `nx add` command. Here's an example of adding the React plugin:
-```sh
-npx nx add @nx/react
+# TMDB API key (https://developer.themoviedb.org/docs/getting-started)
+TMDB_API_KEY="your-tmdb-api-key"
+
+# Optional overrides
+PORT=3000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:4200
 ```
 
-Use the plugin's generator to create new projects. For example, to create a new React app or library:
-
-```sh
-# Generate an app
-npx nx g @nx/react:app demo
-
-# Generate a library
-npx nx g @nx/react:lib some-lib
-```
-
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
-
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
+### 3. Start the database
 
 ```sh
-npx nx connect
+docker compose up -d
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+This starts a PostgreSQL 16 container (`movie_draft_db`) on port `5432`.
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
+### 4. Run database migrations
 
 ```sh
-npx nx g ci-workflow
+npx prisma migrate deploy --schema=libs/prisma-client/prisma/schema.prisma
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### 5. Start the server
 
-## Install Nx Console
+```sh
+npx nx serve server
+```
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+The API will be available at `http://localhost:3000`.
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+### 6. Start the client
 
-## Useful links
+In a separate terminal:
 
-Learn more:
+```sh
+npx nx serve client
+```
 
-- [Learn more about this workspace setup](https://nx.dev/getting-started/intro#learn-nx?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+The app will be available at `http://localhost:4200`.
 
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Running Everything
+
+You can start both the client and server in parallel with a single Nx command:
+
+```sh
+npx nx run-many -t serve -p client server
+```
+
+## API Overview
+
+| Method | Path                    | Description            |
+| ------ | ----------------------- | ---------------------- |
+| `GET`  | `/health`               | Health check           |
+| `POST` | `/auth/register`        | Register a new account |
+| `POST` | `/auth/login`           | Log in                 |
+| `GET`  | `/rooms`                | List your draft rooms  |
+| `POST` | `/rooms`                | Create a draft room    |
+| `GET`  | `/rooms/:id`            | Get room details       |
+| `POST` | `/draft/:roomId/start`  | Start the draft        |
+| `POST` | `/draft/:roomId/pick`   | Make a pick            |
+| `GET`  | `/movies/search`        | Search movies via TMDB |
+| `GET`  | `/movies/lists/popular` | Get popular movies     |
+
+WebSocket events are served on the same port as the API (`ws://localhost:3000`).
+
+## Database
+
+The schema is defined in [libs/prisma-client/prisma/schema.prisma](libs/prisma-client/prisma/schema.prisma) and includes:
+
+- **User** — accounts and authentication
+- **DraftRoom** — a named room with an invite code and draft status (`WAITING`, `IN_PROGRESS`, `COMPLETED`, `CANCELLED`)
+- **Category** — custom draft categories within a room (e.g. "Best Horror")
+- **Participant** — a user's membership in a room, including their draft position
+- **Pick** — a movie picked by a participant for a category, storing TMDB movie metadata
+
+To open Prisma Studio (visual DB browser):
+
+```sh
+npx prisma studio --schema=libs/prisma-client/prisma/schema.prisma
+```
+
+## Useful Commands
+
+```sh
+# Lint all projects
+npx nx run-many -t lint
+
+# Run all tests
+npx nx run-many -t test
+
+# Build for production
+npx nx run-many -t build
+
+# Visualize the project graph
+npx nx graph
+```
+
+## Troubleshooting
+
+### `nx serve` hangs on "Waiting for task..." indefinitely
+
+This is caused by a stuck Nx daemon. Stop it and reset the workspace cache, then retry:
+
+```sh
+npx nx daemon --stop
+npx nx reset
+npx nx serve server
+```

@@ -1,0 +1,161 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// User & Authentication
+// ============================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  passwordHash  String?   // For email/password auth
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  createdRooms  DraftRoom[]   @relation("RoomCreator")
+  participants  Participant[]
+  sessions      Session[]
+  accounts      Account[]
+
+  @@map("users")
+}
+
+// Auth.js Account model for OAuth providers
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// Auth.js Session model
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// Auth.js Verification Token model
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// ============================================
+// Draft Room & Game Logic
+// ============================================
+
+enum DraftStatus {
+  WAITING     // Room created, waiting for players
+  IN_PROGRESS // Draft is actively happening
+  COMPLETED   // Draft finished
+  CANCELLED   // Draft was cancelled
+}
+
+model DraftRoom {
+  id          String      @id @default(cuid())
+  name        String
+  inviteCode  String      @unique @default(cuid())
+  status      DraftStatus @default(WAITING)
+  currentTurn Int         @default(0)  // Index of current turn in snake draft order
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  creatorId    String
+  creator      User          @relation("RoomCreator", fields: [creatorId], references: [id])
+  categories   Category[]
+  participants Participant[]
+  picks        Pick[]
+
+  @@map("draft_rooms")
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   // e.g., "Best Action Movie", "Tom Cruise with a ponytail"
+  order     Int      // Order in which categories are drafted
+  createdAt DateTime @default(now())
+
+  // Relations
+  roomId String
+  room   DraftRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  picks  Pick[]
+
+  @@unique([roomId, order])
+  @@map("categories")
+}
+
+model Participant {
+  id            String   @id @default(cuid())
+  draftPosition Int      // Position in draft order (0-indexed)
+  joinedAt      DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User      @relation(fields: [userId], references: [id])
+  roomId String
+  room   DraftRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  picks  Pick[]
+
+  @@unique([userId, roomId]) // A user can only join a room once
+  @@map("participants")
+}
+
+model Pick {
+  id             String   @id @default(cuid())
+  tmdbMovieId    Int      // TMDB movie ID
+  movieTitle     String
+  moviePosterUrl String?  // Full TMDB poster URL
+  movieYear      Int?
+  pickNumber     Int      // Overall pick number in the draft (0-indexed)
+  pickedAt       DateTime @default(now())
+
+  // Relations
+  roomId        String
+  room          DraftRoom   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  participantId String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  // Each participant can only pick once per category
+  @@unique([categoryId, participantId])
+  // Each movie can only be picked once per room
+  @@unique([roomId, tmdbMovieId])
+  @@map("picks")
+}
