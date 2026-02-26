@@ -1,6 +1,6 @@
 import { authService } from './auth';
 
-const API_BASE = 'http: 
+const API_BASE = 'http://localhost:3000';
 
 export interface DraftSummary {
   id: string;
@@ -84,9 +84,12 @@ export interface DraftState {
   }>;
 }
 
-async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+async function fetchWithAuth(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
   const token = authService.getToken();
-  
+
   if (!token) {
     throw new Error('Not authenticated');
   }
@@ -95,13 +98,12 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });
 
   if (response.status === 401) {
-     
     authService.logout();
     window.location.href = '/login';
     throw new Error('Session expired');
@@ -111,10 +113,9 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
 }
 
 export const api = {
-   
   async getMyDrafts(): Promise<DraftSummary[]> {
     const response = await fetchWithAuth(`${API_BASE}/users/me/drafts`);
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch drafts');
     }
@@ -123,7 +124,6 @@ export const api = {
     return data.drafts;
   },
 
-   
   async createRoom(name: string): Promise<DraftRoom> {
     const response = await fetchWithAuth(`${API_BASE}/rooms`, {
       method: 'POST',
@@ -151,9 +151,12 @@ export const api = {
   },
 
   async joinRoomByCode(inviteCode: string): Promise<DraftRoom> {
-    const response = await fetchWithAuth(`${API_BASE}/rooms/join/${inviteCode}`, {
-      method: 'POST',
-    });
+    const response = await fetchWithAuth(
+      `${API_BASE}/rooms/join/${inviteCode}`,
+      {
+        method: 'POST',
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -165,7 +168,9 @@ export const api = {
   },
 
   async getRoomByInviteCode(inviteCode: string): Promise<DraftRoom> {
-    const response = await fetchWithAuth(`${API_BASE}/rooms/invite/${inviteCode}`);
+    const response = await fetchWithAuth(
+      `${API_BASE}/rooms/invite/${inviteCode}`,
+    );
 
     if (!response.ok) {
       throw new Error('Invalid invite code');
@@ -175,12 +180,17 @@ export const api = {
     return data.room;
   },
 
-   
-  async addCategories(roomId: string, categories: { name: string }[]): Promise<void> {
-    const response = await fetchWithAuth(`${API_BASE}/rooms/${roomId}/categories/bulk`, {
-      method: 'POST',
-      body: JSON.stringify({ categories }),
-    });
+  async addCategories(
+    roomId: string,
+    categories: { name: string }[],
+  ): Promise<void> {
+    const response = await fetchWithAuth(
+      `${API_BASE}/rooms/${roomId}/categories/bulk`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ categories }),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -188,7 +198,6 @@ export const api = {
     }
   },
 
-   
   async startDraft(roomId: string): Promise<void> {
     const response = await fetchWithAuth(`${API_BASE}/draft/${roomId}/start`, {
       method: 'POST',
@@ -211,13 +220,16 @@ export const api = {
     return data.draft;
   },
 
-  async makePick(roomId: string, pick: {
-    categoryId: string;
-    movieId: number;
-    movieTitle: string;
-    moviePosterUrl?: string | null;
-    movieYear?: number | null;
-  }): Promise<DraftPick> {
+  async makePick(
+    roomId: string,
+    pick: {
+      categoryId: string;
+      movieId: number;
+      movieTitle: string;
+      moviePosterUrl?: string | null;
+      movieYear?: number | null;
+    },
+  ): Promise<DraftPick> {
     const response = await fetchWithAuth(`${API_BASE}/draft/${roomId}/pick`, {
       method: 'POST',
       body: JSON.stringify(pick),
@@ -232,10 +244,9 @@ export const api = {
     return data.pick;
   },
 
-   
   async searchMovies(query: string, page = 1): Promise<any> {
     const response = await fetchWithAuth(
-      `${API_BASE}/movies/search?q=${encodeURIComponent(query)}&page=${page}`
+      `${API_BASE}/movies/search?q=${encodeURIComponent(query)}&page=${page}`,
     );
 
     if (!response.ok) {
@@ -246,7 +257,9 @@ export const api = {
   },
 
   async getPopularMovies(page = 1): Promise<any> {
-    const response = await fetchWithAuth(`${API_BASE}/movies/lists/popular?page=${page}`);
+    const response = await fetchWithAuth(
+      `${API_BASE}/movies/lists/popular?page=${page}`,
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch popular movies');

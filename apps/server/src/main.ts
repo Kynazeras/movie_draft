@@ -14,10 +14,10 @@ const server = serve(
 ╔═══════════════════════════════════════════════════╗
 ║           Movie Draft API Server                  ║
 ╠═══════════════════════════════════════════════════╣
-║  🚀 Server running on http: 
+║  🚀 Server running on http://localhost:${config.port}${' '.repeat(12)}║
 ║  📍 Environment: ${config.nodeEnv.padEnd(28)}║
-║  🏥 Health: http: 
-║  🔌 WebSocket: ws: 
+║  🏥 Health: http://localhost:${config.port}/health${' '.repeat(10)}║
+║  🔌 WebSocket: ws://localhost:${config.port}${' '.repeat(14)}║
 ╚═══════════════════════════════════════════════════╝
     `);
   },

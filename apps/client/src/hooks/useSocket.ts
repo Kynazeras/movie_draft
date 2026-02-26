@@ -2,13 +2,24 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { authService } from '../lib/auth';
 
-const SOCKET_URL = 'http: 
+const SOCKET_URL = 'http://localhost:3000';
 
- 
 interface ServerToClientEvents {
-  'room:user-joined': (data: { userId: string; username: string; participantCount: number }) => void;
-  'room:user-left': (data: { userId: string; username: string; participantCount: number }) => void;
-  'draft:started': (data: { roomId: string; currentTurn: number; currentPlayerId: string }) => void;
+  'room:user-joined': (data: {
+    userId: string;
+    username: string;
+    participantCount: number;
+  }) => void;
+  'room:user-left': (data: {
+    userId: string;
+    username: string;
+    participantCount: number;
+  }) => void;
+  'draft:started': (data: {
+    roomId: string;
+    currentTurn: number;
+    currentPlayerId: string;
+  }) => void;
   'draft:pick-made': (data: {
     pickId: string;
     participantId: string;
@@ -27,10 +38,9 @@ interface ServerToClientEvents {
     roundNumber: number;
   }) => void;
   'draft:completed': (data: { roomId: string; completedAt: string }) => void;
-  'error': (data: { message: string }) => void;
+  error: (data: { message: string }) => void;
 }
 
- 
 interface ClientToServerEvents {
   'room:join': (roomId: string) => void;
   'room:leave': (roomId: string) => void;
@@ -41,9 +51,21 @@ type TypedSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export interface UseSocketOptions {
   roomId: string;
-  onUserJoined?: (data: { userId: string; username: string; participantCount: number }) => void;
-  onUserLeft?: (data: { userId: string; username: string; participantCount: number }) => void;
-  onDraftStarted?: (data: { roomId: string; currentTurn: number; currentPlayerId: string }) => void;
+  onUserJoined?: (data: {
+    userId: string;
+    username: string;
+    participantCount: number;
+  }) => void;
+  onUserLeft?: (data: {
+    userId: string;
+    username: string;
+    participantCount: number;
+  }) => void;
+  onDraftStarted?: (data: {
+    roomId: string;
+    currentTurn: number;
+    currentPlayerId: string;
+  }) => void;
   onPickMade?: (data: {
     pickId: string;
     participantId: string;
@@ -80,12 +102,10 @@ export function useSocket(options: UseSocketOptions) {
   const socketRef = useRef<TypedSocket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
-   
   useEffect(() => {
     const token = authService.getToken();
     if (!token || !roomId) return;
 
-     
     const socket: TypedSocket = io(SOCKET_URL, {
       auth: { token },
       transports: ['websocket', 'polling'],
@@ -93,7 +113,6 @@ export function useSocket(options: UseSocketOptions) {
 
     socketRef.current = socket;
 
-     
     socket.on('connect', () => {
       setIsConnected(true);
       socket.emit('room:join', roomId);
@@ -103,7 +122,6 @@ export function useSocket(options: UseSocketOptions) {
       setIsConnected(false);
     });
 
-     
     socket.on('room:user-joined', (data) => {
       onUserJoined?.(data);
     });
@@ -112,7 +130,6 @@ export function useSocket(options: UseSocketOptions) {
       onUserLeft?.(data);
     });
 
-     
     socket.on('draft:started', (data) => {
       onDraftStarted?.(data);
     });
@@ -129,20 +146,17 @@ export function useSocket(options: UseSocketOptions) {
       onDraftCompleted?.(data);
     });
 
-     
     socket.on('error', (data) => {
       onError?.(data);
     });
 
-     
     return () => {
       socket.emit('room:leave', roomId);
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [roomId]);  
+  }, [roomId]);
 
-   
   const requestSync = useCallback(() => {
     if (socketRef.current?.connected) {
       socketRef.current.emit('draft:sync-request', roomId);

@@ -1,4 +1,4 @@
-const API_BASE = 'http: 
+const API_BASE = 'http://localhost:3000';
 
 export interface User {
   id: string;
@@ -42,7 +42,11 @@ class AuthService {
     return data;
   }
 
-  async register(email: string, password: string, name?: string): Promise<AuthResponse> {
+  async register(
+    email: string,
+    password: string,
+    name?: string,
+  ): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: {
@@ -63,21 +67,20 @@ class AuthService {
 
   async logout(): Promise<void> {
     const token = this.getToken();
-    
+
     if (token) {
       try {
         await fetch(`${API_BASE}/auth/logout`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
       } catch (error) {
-         
         console.error('Logout API error:', error);
       }
     }
-    
+
     this.clearSession();
   }
 
@@ -88,7 +91,7 @@ class AuthService {
   getUser(): User | null {
     const userJson = localStorage.getItem(this.userKey);
     if (!userJson) return null;
-    
+
     try {
       return JSON.parse(userJson);
     } catch {

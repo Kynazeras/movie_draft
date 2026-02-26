@@ -12,14 +12,18 @@ interface PosterRowProps {
   movies: Movie[];
 }
 
-const TMDB_IMAGE_BASE = 'https: 
+const TMDB_IMAGE_BASE = 'https://image.tmdb.org/t/p/w500';
 
-export function PosterRow({ direction = 'left', speed = 'normal', movies }: PosterRowProps) {
-   
+export function PosterRow({
+  direction = 'left',
+  speed = 'normal',
+  movies,
+}: PosterRowProps) {
   const duplicatedMovies = [...movies, ...movies];
-  
-  const animationClass = direction === 'left' ? 'animate-scroll-left' : 'animate-scroll-right';
-  
+
+  const animationClass =
+    direction === 'left' ? 'animate-scroll-left' : 'animate-scroll-right';
+
   const speedClass = {
     slow: 'duration-[90s]',
     normal: 'duration-[60s]',
@@ -30,16 +34,17 @@ export function PosterRow({ direction = 'left', speed = 'normal', movies }: Post
     <div className="poster-row relative overflow-hidden py-2">
       {/* Left gradient overlay */}
       <div className="poster-gradient-left absolute left-0 top-0 bottom-0 w-32 z-10 pointer-events-none" />
-      
+
       {/* Right gradient overlay */}
       <div className="poster-gradient-right absolute right-0 top-0 bottom-0 w-32 z-10 pointer-events-none" />
-      
+
       {/* Scrolling container */}
-      <div 
+      <div
         className={`flex gap-4 ${animationClass}`}
         style={{
           width: 'fit-content',
-          animationDuration: speed === 'slow' ? '90s' : speed === 'fast' ? '40s' : '60s',
+          animationDuration:
+            speed === 'slow' ? '90s' : speed === 'fast' ? '40s' : '60s',
         }}
       >
         {duplicatedMovies.map((movie, index) => (
@@ -66,9 +71,11 @@ export function PosterRow({ direction = 'left', speed = 'normal', movies }: Post
   );
 }
 
- 
-export const PLACEHOLDER_MOVIES: Movie[] = Array.from({ length: 20 }, (_, i) => ({
-  id: i,
-  title: `Movie ${i + 1}`,
-  poster_path: null,
-}));
+export const PLACEHOLDER_MOVIES: Movie[] = Array.from(
+  { length: 20 },
+  (_, i) => ({
+    id: i,
+    title: `Movie ${i + 1}`,
+    poster_path: null,
+  }),
+);

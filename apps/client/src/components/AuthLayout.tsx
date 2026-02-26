@@ -153,7 +153,7 @@ const FALLBACK_MOVIES = [
   {
     id: 599,
     title: 'Sunset Boulevard',
-    poster_path: '/sC4Dpmn87oz9AuxSKwHXeDXU3t9.jpg',
+    poster_path: '/zt8aQ6ksqK6p1AopC5zVTDS9pKT.jpg',
   },
   {
     id: 372058,
